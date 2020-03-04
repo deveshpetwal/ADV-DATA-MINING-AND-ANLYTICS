@@ -1,0 +1,92 @@
+---
+title: "SafeBabies"
+output:
+  word_document: default
+  pdf_document: default
+  html_notebook: default
+---
+
+
+#Required libraries:
+
+```{r}
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+```
+
+#Data segregation:
+
+```{r}
+SafeBabies <- Carseats %>% select("Sales", "Price", "ShelveLoc")
+
+head(SafeBabies)
+
+BadSeats <- filter(SafeBabies, ShelveLoc == 'Bad')
+
+GoodSeats <- filter(SafeBabies, ShelveLoc == 'Good')
+
+```
+
+#Model to find b0 & b1 values for the respective two locations:
+
+Why?
+
+Total Profit = Sales * (Price - Production Cost)
+
+Total Profit = (-b1 * Price + b0) * (Price - Production Cost)
+
+By regression we can find values of b0 & b1.
+
+The we can convert Total Profit into a quadratioc equation to find Price by performing derivative of the equation.
+
+```{r}
+Model_BadSeats <- lm(Sales ~ Price, data = BadSeats)
+
+Model_GoodSeats <- lm(Sales ~ Price, data = GoodSeats)
+```
+
+#Finding Profit by substituting values:
+
+```{r}
+Equation_GoodSeats <- expression(-0.065785*P^2 + 17.968864*P*55 + (17.968864)*P +55*0.065785)
+Derivative_Price_GoodSeats <- D(Equation_GoodSeats,'P')
+Price_GoodSeats <- (-0.065785 *55 - 17.968864)/(2 * -0.065785)
+Price_GoodSeats
+
+Equation_BadSeats <- expression(-0.055220*P^2 + 11.832984*P*55 + (11.832984)*P +55*0.055220) 
+Derivative_Price_BadSeats <- D(Equation_BadSeats,'P')
+Price_BadSeats <- (-0.055220 *55 - 11.832984)/(2 * -0.055220)
+Price_BadSeats
+```
+
+#Finding for the cost range 40 - 85:
+
+```{r}
+c <- 40:85
+Optimal_GoodSeats <- numeric(length=length(c))
+for (i in seq_along(c)){
+   Optimal_GoodSeats[i] <- (-0.065785 *c[i] - 17.968864)/(2 * -0.065785)
+}
+
+
+c <- 40:85
+Optimal_BadSeats <- numeric(length=length(c))
+for (i in seq_along(c)){
+   Optimal_BadSeats[i] <- (-0.055220 *c[i] - 11.832984)/(2 * -0.055220)
+}
+```
+
+#Plotting:
+
+```{r}
+
+Pricing <- data.frame(Optimal_GoodSeats, Optimal_BadSeats)
+
+ggplot(Pricing) +
+geom_smooth(aes(x = c, y = Optimal_GoodSeats, color = "Good"), method = "loess") +
+geom_smooth(aes(x = c, y = Optimal_BadSeats, color = "Bad"), method = "loess") +
+labs(x = "Production Cost", y = "Optimal Price", title = "Optimal Price vs Production Cost", color = "Shelve Location")
+```
+
+
