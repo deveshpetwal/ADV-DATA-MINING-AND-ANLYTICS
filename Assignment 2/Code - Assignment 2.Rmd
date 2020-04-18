@@ -1,0 +1,80 @@
+---
+title: "Assignment 2"
+output: word_document
+---
+#Importing Libraries
+
+```{r}
+library(randomForest)
+library(caret)
+library(ggplot2)
+library(mlbench)
+```
+
+#Importing Data
+
+```{r}
+data(BreastCancer) 
+head(BreastCancer)
+levels(BreastCancer$Class)
+```
+
+#Finding missing values and removing them
+
+```{r}
+sum(is.na(BreastCancer))
+BreastCancer <- na.omit(BreastCancer)[,c(2:11)]
+```
+
+#Splitting the data into 70% training and 30% testing.
+
+```{r}
+set.seed(2)
+intrain <- createDataPartition(y = BreastCancer$Class, p = 0.7, list = FALSE)
+training <- BreastCancer[intrain,]
+testing <- BreastCancer[-intrain,]
+```
+
+#RF model without grid search.
+
+```{r}
+set.seed(2)
+rf.model <- train(Class~., data = training, method = 'rf')
+rf.model
+```
+
+
+#Confusion Matrix:
+
+```{r}
+results <- predict(rf.model, testing, type = "raw")
+table(results, testing$Class)
+```
+
+
+#Examining the following values for the mtry variable: 2, 6, 8
+
+```{r}
+set.seed(2)
+Grid_Serach <- expand.grid(.mtry = c(2,6,8))
+rf.model2 <- train(Class~., data = training, method='rf', tuneGrid = Grid_Serach)
+rf.model2
+```
+
+
+#Probablistic Value:
+
+```{r}
+probs <- predict(rf.model2, testing, type="prob")
+head(probs)
+```
+
+
+#Confusion Matrix:
+
+```{r}
+pred_class <- predict(rf.model2, testing, type="raw")
+head(pred_class)
+table(pred_class, testing$Class)
+```
+
